@@ -57,7 +57,7 @@ For a public deployment, also run the runner under gVisor (`runtime: runsc` in t
 
 ## Setup
 
-Requires Node 22.18+. Running code locally also needs the .NET 10 SDK, and rustc 1.97.1 for Rust.
+Requires Node 22.18+. Running code locally also needs the .NET 10 SDK, and rustc 1.97.1 with the `rust-src` component for Rust.
 
 **Development: site plus a local runner**
 

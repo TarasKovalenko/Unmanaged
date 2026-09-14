@@ -169,7 +169,7 @@ public sealed partial class RustExecutor
     [GeneratedRegex(@"commit-hash: (\w+)")]
     private static partial Regex CommitHashRegex();
 
-    [GeneratedRegex(@"(?:/[^\s:]+)?/\.rustup/toolchains/[^/\s]+/lib/rustlib/src/rust/")]
+    [GeneratedRegex(@"(?:/[^\s:]+)?/lib/rustlib/src/rust/")]
     private static partial Regex RustSrcRegex();
 
     [GeneratedRegex(@"thread '([^']*)' \(\d+\) panicked")]

@@ -60,10 +60,12 @@ jobs:
           cache: npm
 
       # Error messages in lessons are verbatim rustc output, so the version is pinned
-      # to the one in src/content/meta.ts.
+      # to the one in src/content/meta.ts. rust-src is needed too: without it, notes
+      # that point into the standard library are printed differently.
       - uses: dtolnay/rust-toolchain@master
         with:
           toolchain: 1.97.1
+          components: rust-src
 
       - uses: actions/setup-dotnet@v6
         with:

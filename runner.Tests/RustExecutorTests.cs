@@ -171,6 +171,7 @@ public sealed class RustExecutorBehaviourTests : IDisposable
             echo 'error[E0382]: borrow of moved value' >&2
             echo '  --> /home/dev/.rustup/toolchains/1.97.1-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/fmt/mod.rs:1:1' >&2
             echo '  --> /.rustup/toolchains/stable/lib/rustlib/src/rust/library/alloc/src/vec.rs:2:2' >&2
+            echo '  --> /opt/rustup/toolchains/1.97.1-x86_64-unknown-linux-gnu/lib/rustlib/src/rust/library/std/src/thread/functions.rs:128:8' >&2
             exit 1
             """;
 
@@ -179,7 +180,7 @@ public sealed class RustExecutorBehaviourTests : IDisposable
         Assert.False(result.Compile.Success);
         Assert.Equal("run", result.Mode);
         Assert.Equal(
-            "error[E0382]: borrow of moved value\n  --> /rustc/0123abcd/library/core/src/fmt/mod.rs:1:1\n  --> /rustc/0123abcd/library/alloc/src/vec.rs:2:2\n",
+            "error[E0382]: borrow of moved value\n  --> /rustc/0123abcd/library/core/src/fmt/mod.rs:1:1\n  --> /rustc/0123abcd/library/alloc/src/vec.rs:2:2\n  --> /rustc/0123abcd/library/std/src/thread/functions.rs:128:8\n",
             result.Compile.Output);
         Assert.Null(result.Execution);
     }

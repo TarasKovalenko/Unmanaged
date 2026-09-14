@@ -16,6 +16,8 @@ const settle = (o: Outcome) =>
 export interface ToolchainScript {
   rustcVersion?: string;
   rustcVerbose?: string;
+  /** Output of `rustc --print sysroot`. */
+  sysroot?: string;
   dotnetVersion?: string | null;
   /** Keyed by the unit directory name, e.g. "borrow__move". Defaults to success. */
   compile?: Record<string, Outcome>;
@@ -26,6 +28,7 @@ export interface ToolchainScript {
 export function fakeRun(script: ToolchainScript = {}) {
   return vi.fn<Run>((file: string, args: string[], options?: RunOptions) => {
     if (file === 'rustc' && args[0] === '--version') return settle({ stdout: script.rustcVersion ?? 'rustc 1.97.1 (8bab26f4f 2026-07-14)\n' });
+    if (file === 'rustc' && args[0] === '--print') return settle({ stdout: script.sysroot ?? '/toolchain\n' });
     if (file === 'rustc' && args[0] === '-vV') return settle({ stdout: script.rustcVerbose ?? 'rustc 1.97.1\ncommit-hash: 8bab26f4fabc\nhost: x\n' });
     if (file === 'rustc') return settle(script.compile?.[basename(options!.cwd!)] ?? {});
     if (file === 'dotnet') {
@@ -36,9 +39,10 @@ export function fakeRun(script: ToolchainScript = {}) {
   });
 }
 
-export function fakeFs() {
+export function fakeFs(options: { rustSrc?: boolean } = {}) {
   const files = new Map<string, string>();
   const fs = {
+    exists: vi.fn<FileSystem['exists']>(async () => options.rustSrc ?? true),
     mkdir: vi.fn<FileSystem['mkdir']>(async () => undefined),
     mkdtemp: vi.fn<FileSystem['mkdtemp']>(async (prefix) => `${prefix}XYZ`),
     rm: vi.fn<FileSystem['rm']>(async () => undefined),

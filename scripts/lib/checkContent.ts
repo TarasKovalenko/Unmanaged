@@ -3,7 +3,7 @@
 // can be tested with fakes. See scripts/check-content.ts for usage.
 
 import { execFile, spawn } from 'node:child_process';
-import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { access, mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { availableParallelism, tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { promisify } from 'node:util';
@@ -48,6 +48,7 @@ export interface FileSystem {
   mkdtemp(prefix: string): Promise<string>;
   rm(path: string, options: { recursive: true; force: true }): Promise<unknown>;
   writeFile(path: string, data: string): Promise<unknown>;
+  exists(path: string): Promise<boolean>;
 }
 
 export interface Logger {
@@ -72,7 +73,17 @@ export function nodeDeps(): Deps {
   return {
     run: promisify(execFile),
     spawn: (command, args, options) => spawn(command, args, options),
-    fs: { mkdir, mkdtemp, rm, writeFile },
+    fs: {
+      mkdir,
+      mkdtemp,
+      rm,
+      writeFile,
+      exists: (path) =>
+        access(path).then(
+          () => true,
+          () => false,
+        ),
+    },
     logger: console,
     env: process.env,
     tmpdir,
@@ -108,12 +119,13 @@ export function parseArgs(argv: string[]): Options {
 // Text helpers
 // ---------------------------------------------------------------------------
 
-// With the rust-src component installed, rustc points notes at local files
-// (~/.rustup/toolchains/<name>/lib/rustlib/src/rust/library/...). Without it,
-// it prints /rustc/<commit-hash>/library/... . Content must be the same on
-// every machine, so rewrite local paths to the portable form.
+// With the rust-src component installed, rustc points notes at the sysroot's copy
+// of the standard library (<sysroot>/lib/rustlib/src/rust/library/...), wherever
+// the toolchain lives: ~/.rustup, /opt/rustup, /usr/local/rustup, /usr. Content
+// must be the same on every machine, so rewrite it to the form rustc uses in its
+// own metadata: /rustc/<commit-hash>/library/...
 export function portablePaths(text: string, commitHash: string): string {
-  return text.replace(/(?:\/[^\s:]+)?\/\.rustup\/toolchains\/[^/\s]+\/lib\/rustlib\/src\/rust\//g, `/rustc/${commitHash}/`);
+  return text.replace(/(?:\/[^\s:]+)?\/lib\/rustlib\/src\/rust\//g, `/rustc/${commitHash}/`);
 }
 
 // Panic output includes a per-run thread id: thread 'main' (17287168) panicked
@@ -351,6 +363,14 @@ export async function rustPass(options: Options, deps: Deps): Promise<boolean> {
   if (!version.includes(` ${toolchain.rustc} `)) {
     failed = true;
     logger.error(`✗ local ${version.trim()} differs from src/content/meta.ts (${toolchain.rustc}). Messages may have drifted: re-check them, then update meta.ts.`);
+  }
+  // Notes that point into the standard library (e.g. "required by a bound in `spawn`")
+  // quote std's source only when the rust-src component is installed. Without it
+  // rustc prints a bare location and narrower gutters, so authored messages can't match.
+  const { stdout: sysroot } = await run('rustc', ['--print', 'sysroot']);
+  if (!(await fs.exists(join(sysroot.trim(), 'lib', 'rustlib', 'src', 'rust', 'library', 'std', 'src', 'lib.rs')))) {
+    logger.error('✗ the rust-src component is not installed. Run `rustup component add rust-src`: compiler messages that quote the standard library differ without it.');
+    return true;
   }
   const units = filterUnits(collectUnits(deps.content), options.only);
   const root = await fs.mkdtemp(join(deps.tmpdir(), 'unmanaged-check-'));

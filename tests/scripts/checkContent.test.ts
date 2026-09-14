@@ -66,6 +66,21 @@ describe('text helpers', () => {
     );
   });
 
+  test('portablePaths handles toolchains outside ~/.rustup (docker images, distro packages)', () => {
+    const text = [
+      '  --> /opt/rustup/toolchains/1.97.1-x86_64-unknown-linux-gnu/lib/rustlib/src/rust/library/std/src/thread/functions.rs:128:8',
+      '  --> /usr/local/rustup/toolchains/1.97.1-aarch64-unknown-linux-gnu/lib/rustlib/src/rust/library/core/src/option.rs:3:4',
+      '  --> /usr/lib/rustlib/src/rust/library/alloc/src/vec/mod.rs:5:6',
+    ].join('\n');
+    expect(portablePaths(text, 'abc')).toBe(
+      [
+        '  --> /rustc/abc/library/std/src/thread/functions.rs:128:8',
+        '  --> /rustc/abc/library/core/src/option.rs:3:4',
+        '  --> /rustc/abc/library/alloc/src/vec/mod.rs:5:6',
+      ].join('\n'),
+    );
+  });
+
   test('portablePaths leaves other paths alone', () => {
     expect(portablePaths('  --> src/main.rs:2:5', 'abc')).toBe('  --> src/main.rs:2:5');
   });
@@ -450,6 +465,20 @@ describe('main', () => {
       expect(err.at(-1)).toBe('\ncontent check failed');
     });
 
+    test('stops before compiling anything when rust-src is missing', async () => {
+      const run = fakeRun({ sysroot: '/opt/toolchain\n' });
+      const { fs } = fakeFs({ rustSrc: false });
+      const { deps, out, err } = fakeDeps({ content, run, fs });
+      expect(await main(['--no-dotnet'], deps)).toBe(1);
+      expect(fs.exists).toHaveBeenCalledWith(join('/opt/toolchain', 'lib', 'rustlib', 'src', 'rust', 'library', 'std', 'src', 'lib.rs'));
+      expect(err).toEqual([
+        '✗ the rust-src component is not installed. Run `rustup component add rust-src`: compiler messages that quote the standard library differ without it.',
+        '\ncontent check failed',
+      ]);
+      expect(out).toEqual([]);
+      expect(run.mock.calls.filter(([file, args]) => file === 'rustc' && args.includes('src/main.rs'))).toEqual([]);
+    });
+
     test('uses "unknown" as the commit hash when rustc -vV does not report one', async () => {
       const run = fakeRun({ rustcVerbose: 'rustc 1.97.1\n', compile: { borrow__ok: { reject: { stderr: RUSTUP_NOTE } } } });
       const { deps, err } = fakeDeps({ content: emptyContent({ snippets: [snippet({ id: 'ok' })] }), run });
@@ -741,7 +770,15 @@ describe('C# helpers', () => {
 describe('nodeDeps', () => {
   test('wires node child processes, filesystem, console and the real content', async () => {
     const deps = nodeDeps();
-    expect(deps.fs).toEqual({ mkdir: fsPromises.mkdir, mkdtemp: fsPromises.mkdtemp, rm: fsPromises.rm, writeFile: fsPromises.writeFile });
+    expect(deps.fs).toEqual({
+      mkdir: fsPromises.mkdir,
+      mkdtemp: fsPromises.mkdtemp,
+      rm: fsPromises.rm,
+      writeFile: fsPromises.writeFile,
+      exists: expect.any(Function),
+    });
+    await expect(deps.fs.exists(process.execPath)).resolves.toBe(true);
+    await expect(deps.fs.exists(join(tmpdir(), 'unmanaged-definitely-missing', 'lib.rs'))).resolves.toBe(false);
     expect(deps.logger).toBe(console);
     expect(deps.env).toBe(process.env);
     expect(deps.tmpdir()).toBe(tmpdir());

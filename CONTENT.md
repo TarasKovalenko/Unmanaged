@@ -30,7 +30,7 @@ npm run paste-output -- drill/my-drill         # print that output escaped for a
 npm run check:content -- --no-dotnet           # skip the C# pass
 ```
 
-Every Rust program in content is complete (it has `fn main`) and declares what should happen to it. The checker needs `rustc` at the version in `src/content/meta.ts` and enforces:
+Every Rust program in content is complete (it has `fn main`) and declares what should happen to it. The checker needs `rustc` at the version in `src/content/meta.ts`, with the `rust-src` component (`rustup component add rust-src`). Without it, rustc prints notes that point into the standard library differently, so the checker stops early and says so. It enforces:
 
 | `expect` | the checker |
 |---|---|
