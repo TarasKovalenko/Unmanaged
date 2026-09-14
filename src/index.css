@@ -1,0 +1,148 @@
+@import '@fontsource-variable/jetbrains-mono';
+@import '@fontsource/ibm-plex-sans/400.css';
+@import '@fontsource/ibm-plex-sans/400-italic.css';
+@import '@fontsource/ibm-plex-sans/500.css';
+@import '@fontsource/ibm-plex-sans/600.css';
+@import 'tailwindcss';
+
+/* Theme tokens. Dark is the default; light is opt-in via data-theme. */
+:root {
+  color-scheme: dark;
+  --bg: #16191c;
+  --surface: #1d2125;
+  --raised: #242930;
+  --rule: #2e343b;
+  --rule-strong: #444c55;
+  --text: #cdd3d8;
+  --text-strong: #eef1f3;
+  --muted: #8a939c;
+  --oxide: #b0582f;
+  --oxide-text: #de8a5f;
+  --ochre: #d9a441;
+  --steel: #8ea5b8;
+  --verdigris: #72a497;
+  --danger: #e5534b;
+  --danger-soft: rgb(229 83 75 / 0.14);
+  --focus: #d9a441;
+
+  /* syntax */
+  --syn-keyword: #d98a62;
+  --syn-type: #a9bccb;
+  --syn-string: #9fbf92;
+  --syn-number: #d6b36f;
+  --syn-comment: #6c757e;
+  --syn-macro: #c79ad6;
+  --syn-lifetime: #d6a0b8;
+  --syn-attr: #7f8c98;
+}
+
+:root[data-theme='light'] {
+  color-scheme: light;
+  --bg: #eef0f1;
+  --surface: #f8f9f9;
+  --raised: #e3e6e8;
+  --rule: #d2d7db;
+  --rule-strong: #a9b1b8;
+  --text: #2b3136;
+  --text-strong: #121619;
+  --muted: #5f6870;
+  --oxide: #a24e27;
+  --oxide-text: #9a4520;
+  --ochre: #a8740f;
+  --steel: #4f6e86;
+  --verdigris: #2f7566;
+  --danger: #c4312a;
+  --danger-soft: rgb(196 49 42 / 0.1);
+  --focus: #a8740f;
+
+  --syn-keyword: #a2461d;
+  --syn-type: #33566f;
+  --syn-string: #3f6d33;
+  --syn-number: #8a5f0b;
+  --syn-comment: #7b848c;
+  --syn-macro: #7a3f91;
+  --syn-lifetime: #93406a;
+  --syn-attr: #6b757e;
+}
+
+@theme inline {
+  --font-sans: 'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono Variable', ui-monospace, 'SFMono-Regular', Menlo, monospace;
+
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-raised: var(--raised);
+  --color-rule: var(--rule);
+  --color-rule-strong: var(--rule-strong);
+  --color-text: var(--text);
+  --color-strong: var(--text-strong);
+  --color-muted: var(--muted);
+  --color-oxide: var(--oxide);
+  --color-oxide-text: var(--oxide-text);
+  --color-ochre: var(--ochre);
+  --color-steel: var(--steel);
+  --color-verdigris: var(--verdigris);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+}
+
+html {
+  background: var(--bg);
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+code,
+pre,
+.font-mono {
+  font-variant-ligatures: none;
+  font-feature-settings: 'calt' 0;
+}
+
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+::selection {
+  background: color-mix(in srgb, var(--oxide) 45%, transparent);
+}
+
+/* Syntax classes emitted by src/lib/highlight.ts */
+.tok-keyword { color: var(--syn-keyword); }
+.tok-type { color: var(--syn-type); }
+.tok-string { color: var(--syn-string); }
+.tok-number { color: var(--syn-number); }
+.tok-comment { color: var(--syn-comment); font-style: italic; }
+.tok-macro { color: var(--syn-macro); }
+.tok-lifetime { color: var(--syn-lifetime); }
+.tok-attr { color: var(--syn-attr); }
+
+/* rustc-style underlines keyed from authored compiler output */
+.mark-primary {
+  text-decoration: underline wavy var(--danger);
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 4px;
+}
+.mark-secondary {
+  text-decoration: underline dashed var(--steel);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 4px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}
