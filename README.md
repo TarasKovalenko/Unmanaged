@@ -1,5 +1,7 @@
 # Unmanaged
 
+[![CI](https://github.com/TarasKovalenko/Unmanaged/actions/workflows/ci.yml/badge.svg)](https://github.com/TarasKovalenko/Unmanaged/actions/workflows/ci.yml)
+
 Rust for people who write C#.
 
 Unmanaged teaches Rust to experienced C# and .NET developers. It does not re-explain generics, closures or async. It concentrates on the places where C# intuition gives the wrong answer, and it is built around interaction rather than prose: you watch borrows collide, step through async code on a clock, diagnose real compiler errors before seeing the fix, and run and edit the code yourself.
